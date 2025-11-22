@@ -16,7 +16,7 @@ COPY src src
 
 # Construye la aplicación (genera el archivo JAR)
 # El JAR se llama 'sazon.jar' (según finalName en pom.xml) y estará en /app/target/
-RUN ./mvnw clean package -DskipTests
+RUN mvnw clean package -DskipTests
 
 # --- FASE 2: EJECUCIÓN (RUNTIME) ---
 # Usamos una imagen base ligera de solo JRE (Java Runtime Environment) para la ejecución.
