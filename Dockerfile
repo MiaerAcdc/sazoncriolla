@@ -1,6 +1,6 @@
 # --- FASE 1: CONSTRUCCIÓN (BUILD) ---
-# Usamos una imagen que incluye Maven (3.9.6) Y OpenJDK 20
-FROM maven:3.9.6-openjdk-20 AS build
+# Imagen corregida con la etiqueta oficial de Docker Hub
+FROM maven:3.9.6-jdk-20 AS build
 
 # Establece el directorio de trabajo
 WORKDIR /app
@@ -9,11 +9,11 @@ WORKDIR /app
 COPY pom.xml .
 COPY src src
 
-# Construye la aplicación usando 'mvn' directamente
+# Construye la aplicación
 RUN mvn clean package -DskipTests
 
 # --- FASE 2: EJECUCIÓN (RUNTIME) ---
-# Seguimos usando una imagen ligera de solo JRE 20 para el entorno de producción
+# Usamos JRE 20 para el entorno de producción
 FROM eclipse-temurin:20-jre
 
 # Establece el directorio de trabajo para la ejecución
