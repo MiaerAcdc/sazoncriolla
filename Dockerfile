@@ -14,7 +14,7 @@ RUN mvn clean package -DskipTests
 
 # --- FASE 2: EJECUCIÓN (RUNTIME) ---
 # Usa una imagen base ligera de solo JRE (Java Runtime Environment)
-FROM eclipse-temurin:17-jre-focal
+FROM eclipse-temurin:20-jre-focal
 
 # Establece el directorio de trabajo
 WORKDIR /app
