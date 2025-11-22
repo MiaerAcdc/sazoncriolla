@@ -1,30 +1,38 @@
 # --- FASE 1: CONSTRUCCIÓN (BUILD) ---
-# Usa una imagen base de Java 17 con Maven preinstalado
-FROM maven:3.8.7-eclipse-temurin-17 AS build
+# Usamos una imagen que contenga el JDK 20, que es necesario para compilar.
+FROM eclipse-temurin:20-jdk AS build
 
-# Copia el contenido de la carpeta 'sazon' a /app (ya que el Dockerfile está dentro de sazon)
-COPY . /app 
-
-# CORRECCIÓN: El pom.xml está en la raíz de /app, por lo que el WORKDIR es /app
-WORKDIR /app 
-
-# Construye la aplicación (genera el archivo JAR)
-# El JAR se llama 'sazon.jar' (según finalName en pom.xml) y está en /app/target/
-RUN mvn clean package -DskipTests
-
-# --- FASE 2: EJECUCIÓN (RUNTIME) ---
-# Usa una imagen base ligera de solo JRE (Java Runtime Environment)
-FROM eclipse-temurin:20-jre
-
-# Establece el directorio de trabajo
+# Establece el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# CORRECCIÓN: Copia el JAR generado ('sazon.jar') y lo renombra a 'app.jar'
-COPY --from=build /app/target/sazon.jar app.jar
+# Copia los archivos de configuración de Maven (pom.xml) y el wrapper
+# Se hace antes del código fuente para aprovechar el cache de Docker (si pom.xml no cambia)
+COPY pom.xml .
+COPY mvnw .
+COPY .mvn .mvn
 
-# Expón el puerto que usa tu Spring Boot (por defecto es 8080)
+# Copia el código fuente de tu aplicación
+COPY src src
+
+# Construye la aplicación (genera el archivo JAR)
+# El JAR se llama 'sazon.jar' (según finalName en pom.xml) y estará en /app/target/
+RUN ./mvnw clean package -DskipTests
+
+# --- FASE 2: EJECUCIÓN (RUNTIME) ---
+# Usamos una imagen base ligera de solo JRE (Java Runtime Environment) para la ejecución.
+# Corregido a '20-jre' que es una etiqueta válida.
+FROM eclipse-temurin:20-jre
+
+# Establece el directorio de trabajo para la ejecución
+WORKDIR /app
+
+# Copia el JAR generado desde la fase de construcción ('build')
+# Nota: La ruta y nombre del JAR deben coincidir con la configuración de tu pom.xml.
+# Asumimos que el JAR se llama 'sazon.jar' y está en target/.
+COPY --from=build /app/target/sazon.jar sazon.jar
+
+# Expone el puerto por defecto de Spring Boot
 EXPOSE 8080
 
-# Comando para ejecutar la aplicación
-# Inicia el archivo 'app.jar'
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Comando para ejecutar la aplicación JAR
+ENTRYPOINT ["java", "-jar", "sazon.jar"]
